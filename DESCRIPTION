@@ -1,8 +1,8 @@
 Package: MCPModPack
 Type: Package
 Title: Simulation-Based Design and Analysis of Dose-Finding Trials
-Version: 0.1
-Date: 2020-02-24
+Version: 0.2
+Date: 2020-06-15
 Authors@R: c(
    person("Alex", "Dmitrienko", email = "admitrienko@medianainc.com", role = c("aut", "cre")),
    person("Alun", "Bedding", role = "ctb"),
@@ -18,11 +18,11 @@ License: GPL-3
 LazyLoad: yes
 LazyData: true
 NeedsCompilation: yes
-Packaged: 2020-03-11 00:30:53 UTC; victordmitrienko
 Repository: CRAN
 Author: Alex Dmitrienko [aut, cre],
   Alun Bedding [ctb],
   John Cook [ctb]
-Date/Publication: 2020-03-19 13:20:12 UTC
 URL: https://github.com/medianainc/MCPModPack
 BugReports: https://github.com/medianainc/MCPModPack/issues
+Packaged: 2020-06-17 13:13:45 UTC; victordmitrienko
+Date/Publication: 2020-06-17 13:40:03 UTC
