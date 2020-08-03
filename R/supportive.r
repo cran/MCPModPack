@@ -294,7 +294,20 @@ ModStep = function(endpoint_index, selected_models, theta_vector, dose, resp, de
     # Maximum number of iterations to find maximum likelihood estimates
     maxit = 300
 
-    model_fit = MCPModFitDRModels(endpoint_index, selected_models, dose, resp, delta, direction_index, maxit, theta_vector)
+    withCallingHandlers({          
+
+        model_fit = MCPModFitDRModels(endpoint_index, selected_models, dose, resp, delta, direction_index, maxit, theta_vector)
+
+        },
+
+        warning = function(c) {
+          msg <- conditionMessage(c)
+          if ( grepl("the line search step became smaller than the minimum value allowed", msg, fixed = TRUE) ) {
+            invokeRestart("muffleWarning")
+          }
+        }
+
+    )
 
     results = list(model_fit = model_fit,
                    dose = dose, 
@@ -371,6 +384,8 @@ ContrastStep = function(endpoint_index, selected_models, user_specified, n_group
 
         # Alternative standardization for the quadratic model
         if (i == 2) {
+
+          parameter_values = rep(0, 3)
 
           if (direction_index == 1) {
   
@@ -641,7 +656,16 @@ MCPStep = function(endpoint_index, contrast_results, selected_models, user_speci
 
 }
 
-MCPModSimulation = function(endpoint_type, models, alpha = 0.025, direction = "increasing", model_selection = "AIC", Delta = 0, theta = 0, sim_models, sim_parameters) {
+MCPModSimulation = function(endpoint_type, models, alpha = 0.025, direction = "increasing", model_selection = "AIC", Delta, theta = 0, sim_models, sim_parameters) {
+
+    if (missing(endpoint_type)) stop("Endpoint type (endpoint_type): Value must be specified.", call. = FALSE)      
+    if (missing(models)) stop("Candidate dose-response models (models): Value must be specified.", call. = FALSE)
+
+    if (missing(Delta)) stop("Treatment effect for identifying the target dose (Delta): Value must be specified.", call. = FALSE)
+
+    if (missing(sim_models)) stop("Simulation models (sim_models): Value must be specified.", call. = FALSE)
+
+    if (missing(sim_parameters)) stop("Simulation parameters (sim_parameters): Value must be specified.", call. = FALSE)
 
     # Total number of models
     n_models = length(DF_model_list)
@@ -1245,8 +1269,21 @@ MCPModSimulation = function(endpoint_type, models, alpha = 0.025, direction = "i
     # Go threshold is defined relative to the placebo effect
     go_threshold = go_threshold + placebo_effect 
 
-    # Run simulations
-    sim_results = MCPModRunSimulations(endpoint_index, selected_models, theta, theta_vector, delta, model_selection_index, opt_contrast, crit_value, sim_parameter_list, sim_model_list, direction_index, go_threshold, n_points, maxit)
+    withCallingHandlers({          
+
+      # Run simulations
+      sim_results = MCPModRunSimulations(endpoint_index, selected_models, theta, theta_vector, delta, model_selection_index, opt_contrast, crit_value, sim_parameter_list, sim_model_list, direction_index, go_threshold, n_points, maxit)
+
+              },
+
+      warning = function(c) {
+        msg <- conditionMessage(c)
+        if ( grepl("the line search step became smaller than the minimum value allowed", msg, fixed = TRUE) ) {
+          invokeRestart("muffleWarning")
+        }
+      }
+
+    )
 
     results = list(contrast_results = contrast_results,
                    input_parameters = input_parameters,
@@ -1260,7 +1297,16 @@ MCPModSimulation = function(endpoint_type, models, alpha = 0.025, direction = "i
 }
 # End of MCPModSimulation
 
-MCPModAnalysis = function(endpoint_type, models, dose, resp, alpha = 0.025, direction = "increasing", model_selection = "AIC", Delta = 0, theta = 0) {
+MCPModAnalysis = function(endpoint_type, models, dose, resp, alpha = 0.025, direction = "increasing", model_selection = "AIC", Delta, theta = 0) {
+
+    if (missing(endpoint_type)) stop("Endpoint type (endpoint_type): Value must be specified.", call. = FALSE)      
+    if (missing(models)) stop("Candidate dose-response models (models): Value must be specified.", call. = FALSE)
+
+    if (missing(dose)) stop("Dose values (dose): Value must be specified.", call. = FALSE)
+
+    if (missing(dose)) stop("Response values (resp): Value must be specified.", call. = FALSE)
+
+    if (missing(Delta)) stop("Treatment effect for identifying the target dose (Delta): Value must be specified.", call. = FALSE)
 
     # Total number of models
     n_models = length(DF_model_list)
@@ -1963,11 +2009,7 @@ print.MCPModSimulationResults = function (x, digits = 3, ...) {
 
     if (input_parameters$model_selection != "aveAIC") {
 
-      cat("\n")
-
-      cat(paste0("Go probability summary based on the threshold of ", input_parameters$go_threshold))
-
-      cat("\n\n")
+      cat(paste0("\nGo probability summary (based on the threshold of ", input_parameters$go_threshold, ")\n\n"))
 
       x = data.frame(input_parameters$max_effect, 
                      round(sim_results$go_prob, digits))
@@ -1984,7 +2026,7 @@ print.MCPModSimulationResults = function (x, digits = 3, ...) {
 
     }
 
-    cat("\nTarget dose estimates\n\n")
+    cat("\nEstimated target doses (based on Delta = ", input_parameters$delta, ")\n\n", sep = "") 
 
     true_target_dose = round(sim_results$true_target_dose, digits)
     true_target_dose[true_target_dose == -1] = "NA"
@@ -2466,7 +2508,7 @@ GenerateAnalysisReport = function(results, report_title) {
     data_frame = cbind(col1, col2)
     title = paste0("Table ", table_index, ". Model selection parameters.")
 
-    footnote = "Delta is defined as the pre-defined clinically meaningful improvement over placebo."
+    footnote = "Delta is the pre-defined clinically meaningful improvement over placebo."
 
     column_width = c(3, 3.5)
     item_list[[item_index]] = CreateTable(data_frame, column_names, column_width, title, FALSE, footnote)
@@ -2823,7 +2865,7 @@ GenerateSimulationReport = function(results, report_title) {
     col1 = c(col1, "Model selection criterion", "Delta")
     col2 = c(col2, model_selection_label, input_parameters$delta)
 
-    footnote = "Delta is defined as the pre-defined clinically meaningful improvement over placebo."
+    footnote = "Delta is the pre-defined clinically meaningful improvement over placebo."
 
     data_frame = cbind(col1, col2)
     title = paste0("Table ", table_index, ". Model selection parameters.")
@@ -2972,8 +3014,10 @@ GenerateSimulationReport = function(results, report_title) {
 
     title = paste0("Table ", table_index, ". Simulation results: Power.")
 
+    footnote = "Power is the probability that the best dose-response contrast is significant."
+
     column_width = c(2, 2.5, 2)
-    item_list[[item_index]] = CreateTable(data_frame, column_names, column_width, title, FALSE)
+    item_list[[item_index]] = CreateTable(data_frame, column_names, column_width, title, FALSE, footnote)
     item_index = item_index + 1
     table_index = table_index + 1 
 
@@ -2990,9 +3034,10 @@ GenerateSimulationReport = function(results, report_title) {
 
       title = paste0("Table ", table_index, ". Simulation results: Go probabilities based on the threshold of ", input_parameters$go_threshold, ".")
 
-      column_width = c(2, 2.5, 2)
+      footnote = "The go probability is the probability that the best dose-response contrast is significant and the maximum effect for the corresponding model exceeds the pre-defined go threshold."
 
-      item_list[[item_index]] = CreateTable(data_frame, column_names, column_width, title, TRUE)
+      column_width = c(2, 2.5, 2)
+      item_list[[item_index]] = CreateTable(data_frame, column_names, column_width, title, TRUE, footnote)
       item_index = item_index + 1
       table_index = table_index + 1 
 

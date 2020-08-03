@@ -15,7 +15,7 @@ The MCPModPack package facilitates the design and analysis of dose-finding clini
 Package: \tab MCPModPack\cr
 Type: \tab Package\cr
 Version: \tab 0.2\cr
-Date: \tab 2020-06-15\cr
+Date: \tab 2020-06-27\cr
 License: \tab GPL-3
 }
 Key functions included in the package:
@@ -59,11 +59,11 @@ Pinheiro J., Bornkamp B., Glimm E., Bretz F. (2013). Model-based dose finding un
 # of the non-linear model parameters (linear, quadratic, exponential, 
 # emax, logistic and sigemax)
 models = list(linear = NA, 
-              quadratic = -1, 
-              exponential = 2, 
-              emax = 0.2, 
-              logistic = c(0.1, 1), 
-              sigemax = c(0.1, 1))
+              quadratic = -0.5, 
+              exponential = 0.3, 
+              emax = 0.3, 
+              logistic = c(0.5, 0.1), 
+              sigemax = c(0.5, 5))
 
 # One-sided Type I error rate
 alpha = 0.025

@@ -44,7 +44,7 @@ MCPModSimulation(endpoint_type, models, alpha, direction,
   \item{sim_models}{List defining the assumed dose-response model and initial values of the non-linear parameters in the simulated trial. The package supports the following dose-response models: linear, quadratic, exponential, Emax, logistic and sigEmax. No initial value is required for the linear model, a single initial value is required for the quadratic, exponential and Emax models, and two initial values are required for the logistic and sigEmax models. The following components are required:
    \itemize{
     \item \code{"placebo_effect"}: Numeric value defining the placebo effect in the assumed dose-response model.
-    \item \code{"max_effect"}: Numeric vector defining the effects at the maximum dose in the assumed dose-response model. Positive values are required if \cr \code{direction = "Increasing"} and negative values are required otherwise.
+    \item \code{"max_effect"}: Numeric vector defining the effects at the maximum dose in the assumed dose-response model. These effects are defined relative to the placebo effect. Positive values are required if \cr \code{direction = "Increasing"} and negative values are required otherwise.
     \item \code{"sd"}: Numeric vector defining the standard deviations of the response variable in each trial arm (required for normally distributed endpoints).
   }
   }
@@ -54,7 +54,7 @@ MCPModSimulation(endpoint_type, models, alpha, direction,
     \item \code{"doses"}: Numeric vector defining the dose levels in each trial arm.
     \item \code{"dropout_rate"}: Numeric value defining the dropout rate in the simulated trial (between 0 and 1).
     \item \code{"nsims"}: Integer value defining the number of simulation runs.
-    \item \code{"go_threshold"}: Numeric value specifying the threshold for computing go probabilities, i.e., probabilities that the maximum effect for the best dose-response model exceeds a pre-defined value. The threshold is defined relative to the placebo effect. A positive value is required if \code{direction =} \code{"Increasing"} and a negative value is required otherwise.
+    \item \code{"go_threshold"}: Numeric value specifying the threshold for computing go probabilities, i.e., probabilities that the maximum effect for the best dose-response model corresponding to a significant contrast exceeds a pre-defined value. The threshold is defined relative to the placebo effect. A positive value is required if \code{direction =} \code{"Increasing"} and a negative value is required otherwise.
   }
   }
 
@@ -84,11 +84,11 @@ endpoint_type = "Count"
 # of the non-linear model parameters (linear, quadratic, exponential, 
 # emax, logistic and sigemax)
 models = list(linear = NA, 
-              quadratic = -1, 
-              exponential = 2, 
-              emax = 0.2, 
-              logistic = c(0.1, 1), 
-              sigemax = c(0.1, 1))
+              quadratic = -0.5, 
+              exponential = 0.3, 
+              emax = 0.3, 
+              logistic = c(0.5, 0.1), 
+              sigemax = c(0.5, 5))
 
 # One-sided Type I error rate
 alpha = 0.025

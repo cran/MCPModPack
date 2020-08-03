@@ -668,6 +668,7 @@ double FindTargetDose(const int &model, const vector<double> &beta, const double
 
   }
 
+
   if (dose >= 0.0) {
 
       // Linear
@@ -697,14 +698,20 @@ double FindTargetDose(const int &model, const vector<double> &beta, const double
 
       // Exponential
       if (model == 3) {
-          if (abs(beta[1]) <= 0.0001) {
-              dose = -1.0;   
-          } else {
-              if (abs(local_delta / beta[1]) <= 0.0001) {
-                dose = -1.0; 
-              } else {
-                dose = beta[2] * log(local_delta / beta[1] + 1.0);
-              }
+          if (direction_index == 1) {
+            if (beta[1] > 0 &&  local_delta + beta[1] > 0.0) {
+                dose = beta[2] * (-log(beta[1]) + log(local_delta + beta[1]));  
+            } else {
+                dose = -1.0;   
+            } 
+          }
+
+          if (direction_index == -1) {
+            if (beta[1] < 0 && local_delta + beta[1] < 0.0) {
+                dose = beta[2] * (-log(-beta[1]) + log(-local_delta - beta[1]));  
+            } else {
+                dose = -1.0;   
+            } 
           }
 
       }
@@ -759,11 +766,9 @@ double FindTargetDose(const int &model, const vector<double> &beta, const double
   if (dose <= 0.0) dose = -1.0;
   if (dose >= 10000.0) dose = -1.0;
 
-
-    return dose;
+  return dose;
 
 }
-
 
 
 class RegressionLinear: public MFuncGrad
@@ -1216,8 +1221,8 @@ public:
             // Restricted estimates
             e0 = beta[0];    
             emax = beta[1];    
-            ed50 = max(beta[2], 0.01);    
-            delta = max(beta[3], 0.01);    
+            ed50 = beta[2];    
+            delta = beta[3];    
             sigma = max(beta[4], 0.0001);    
 
             for(i = 0; i < n; i++) {
@@ -1243,8 +1248,8 @@ public:
             // Restricted estimates
             e0 = beta[0];    
             emax = beta[1];    
-            ed50 = max(beta[2], 0.01);    
-            delta = max(beta[3], 0.01);    
+            ed50 = beta[2];    
+            delta = beta[3];    
 
             for(i = 0; i < n; i++) {
                 den = 1.0 + exp((ed50 - X[i]) / delta);
@@ -1275,8 +1280,8 @@ public:
             // Restricted estimates
             e0 = beta[0];    
             emax = beta[1];    
-            ed50 = max(beta[2], 0.01);    
-            delta = max(beta[3], 0.01);    
+            ed50 = beta[2];    
+            delta = beta[3];    
 
             for(i = 0; i < n; i++) {
                 den = 1.0 + exp((ed50 - X[i]) / delta);
@@ -1574,23 +1579,27 @@ void FitDoseResponseModels(vector<ModelInformation> &model_information, const Nu
             if (i == 2) {
                 RegressionExponential exponential_regression(dose, outcome);
                 model_information[i].status = optim_lbfgs(exponential_regression, beta, fopt, maxit, eps_f, eps_g);
+                beta[2] = max(beta[2], 0.01);                                
             }
 
             if (i == 3) {
                 RegressionEmax emax_regression(dose, outcome);
                 model_information[i].status = optim_lbfgs(emax_regression, beta, fopt, maxit, eps_f, eps_g);
+                beta[2] = max(beta[2], 0.01);                                
             }
 
             if (i == 4) {
                 RegressionLogistic logistic_regression(dose, outcome);
                 model_information[i].status = optim_lbfgs(logistic_regression, beta, fopt, maxit, eps_f, eps_g);
+                beta[2] = max(beta[2], 0.01);             
+                beta[3] = max(beta[3], 0.01);               
             }
 
             if (i == 5) {
                 RegressionSigEmax sigemax_regression(dose, outcome);
                 model_information[i].status = optim_lbfgs(sigemax_regression, beta, fopt, maxit, eps_f, eps_g);
-                beta[2] = max(beta[2], 0.0001);                
-                beta[3] = max(beta[3], 0.0001);               
+                beta[2] = max(beta[2], 0.01);                
+                beta[3] = max(beta[3], 0.01);               
             }
 
             if(model_information[i].status >= 0) {
@@ -1600,7 +1609,7 @@ void FitDoseResponseModels(vector<ModelInformation> &model_information, const Nu
             }
 
             // Criteria for determining convergence
-            if (isnan(fopt) || isnan(final_gradient) || abs(final_gradient) > 10.0 || model_information[i].status < 0) {
+            if (isnan(fopt) || isnan(final_gradient) || abs(final_gradient) > 100.0 || model_information[i].status < 0) {
                 convergence = 0;
                 model_information[i].status = -1;
             }
