@@ -14,8 +14,8 @@ The MCPModPack package facilitates the design and analysis of dose-finding clini
 \tabular{ll}{
 Package: \tab MCPModPack\cr
 Type: \tab Package\cr
-Version: \tab 0.2\cr
-Date: \tab 2020-06-27\cr
+Version: \tab 0.3\cr
+Date: \tab 2020-08-01\cr
 License: \tab GPL-3
 }
 Key functions included in the package:
@@ -92,9 +92,9 @@ results = MCPModAnalysis(endpoint_type = "Normal",
 # Simple summary of the MCPMod analysis results
 results
 
-# Detailed summary of the MCPMod analysis results
+# Detailed summary of the MCPMod analysis results (remove tempfile)
 AnalysisReport(results, 
   "MCPMod analysis summary (Normally distributed endpoint)", 
-  "MCPMod analysis summary (Normally distributed endpoint).docx") 
+  tempfile("MCPMod analysis summary (Normally distributed endpoint).docx", fileext=".docx")) 
   }
 }
